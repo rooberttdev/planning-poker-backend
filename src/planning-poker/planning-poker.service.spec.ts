@@ -20,7 +20,7 @@ describe('PlanningPokerService', () => {
     const room = service.createRoom('Alice');
     expect(room.id).toBeDefined();
     expect(room.moderator).toBe('Alice');
-    expect(room.participants.size).toBe(0);
+    expect(room.participants.size).toBe(1);
     expect(room.currentTask).toBeUndefined();
   });
 

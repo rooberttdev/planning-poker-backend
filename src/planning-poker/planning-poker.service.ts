@@ -1,33 +1,54 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Room } from './interfaces/room-interface';
 import { v4 as uuid } from 'uuid';
+import { Issue } from './interfaces/issues.interface';
 
 @Injectable()
 export class PlanningPokerService {
   private readonly logger = new Logger(PlanningPokerService.name);
   private rooms = new Map<string, Room>();
+  private cleanupTimer: NodeJS.Timeout;
   constructor() {
     this.logger.log('PlanningPokerService initialized');
-    setInterval(() => {
+    this.cleanupTimer = setInterval(() => {
       this.logger.log(
-        `Active rooms: ${this.rooms.size} - IDs: [${Array.from(this.rooms.keys()).join(', ')}]`,
+        `Active rooms: ${this.rooms.size} - IDs: [${[...this.rooms.keys()].join(', ')}]`,
       );
     }, 30000);
+    this.cleanupTimer.unref();
+  }
+  onModuleDestroy() {
+    clearInterval(this.cleanupTimer);
   }
   createRoom(moderator: string, roomName?: string): Room {
     const id = uuid();
     const room: Room = {
       id,
       moderator,
-      participants: new Set(),
+      participants: new Set([moderator]),
       currentTask: undefined,
       name: roomName,
+      issues: [],
     };
     this.rooms.set(id, room);
     this.logger.log(`Room created: ${id} by ${moderator}`);
     return room;
   }
+  getIssues(roomId: string): Issue[] {
+    return [...this.getRoom(roomId).issues];
+  }
 
+  addIssue(roomId: string, issue: Issue): Issue[] {
+    const room = this.getRoom(roomId);
+    room.issues.push(issue);
+    return [...room.issues];
+  }
+
+  updateIssue(roomId: string, issue: Issue): Issue[] {
+    const room = this.getRoom(roomId);
+    room.issues = room.issues.map((i) => (i.id === issue.id ? issue : i));
+    return [...room.issues];
+  }
   getRoom(id: string): Room {
     const room = this.rooms.get(id);
     if (!room) {

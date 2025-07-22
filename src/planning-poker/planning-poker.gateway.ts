@@ -27,50 +27,51 @@ export class PlanningPokerGateway {
     @MessageBody() dto: CreateRoomDto,
     @ConnectedSocket() client: Socket,
   ) {
-    try {
-      const room = this.poker.createRoom(dto.moderator, dto.roomName);
-      client.join(room.id);
-      client.emit('roomCreated', room);
-      this.logger.log(`createRoom → ${room.id}`);
-    } catch (err) {
-      client.emit('error', err.message);
-    }
+    const room = this.poker.createRoom(dto.moderator, dto.roomName);
+    this.poker.joinRoom(room.id, dto.moderator);
+    client.join(room.id);
+
+    client.emit('roomCreated', room);
+    client.emit('participantJoined', Array.from(room.participants));
+    client.emit('syncIssues', room.issues);
+
+    this.server
+      .to(room.id)
+      .emit('participantJoined', Array.from(room.participants));
+    this.server.to(room.id).emit('syncIssues', room.issues);
+
+    this.logger.log(`createRoom → ${room.id}`);
   }
+
   @SubscribeMessage('getRoomInfo')
   async handleGetRoomInfo(
     @MessageBody() dto: GetRoomInfoDto,
     @ConnectedSocket() client: Socket,
   ) {
-    try {
-      const room = this.poker.getRoom(dto.roomId);
-      client.emit('roomInfo', {
-        roomId: dto.roomId,
-        name: room.name,
-        moderator: room.moderator,
-        participantCount: room.participants.size,
-      });
-      this.logger.log(`getRoomInfo → ${dto.roomId}`);
-    } catch (err) {
-      client.emit('error', err.message);
-    }
+    const room = this.poker.getRoom(dto.roomId);
+    client.emit('roomInfo', {
+      roomId: room.id,
+      name: room.name,
+      moderator: room.moderator,
+      participantCount: room.participants.size,
+      participants: Array.from(room.participants),
+    });
+    client.emit('syncIssues', room.issues);
+    this.logger.log(`getRoomInfo → ${room.id}`);
   }
+
   @SubscribeMessage('joinRoom')
   async handleJoin(
     @MessageBody() dto: JoinRoomDto,
     @ConnectedSocket() client: Socket,
   ) {
-    try {
-      const room = this.poker.joinRoom(dto.roomId, dto.participant);
-      client.join(dto.roomId);
-      this.server
-        .to(dto.roomId)
-        .emit('participantJoined', Array.from(room.participants));
-      this.logger.log(`joinRoom → ${dto.participant} in ${dto.roomId}`);
-    } catch (err) {
-      client.emit('error', err.message);
-    }
+    const room = this.poker.joinRoom(dto.roomId, dto.participant);
+    client.join(room.id);
+    this.server
+      .to(room.id)
+      .emit('participantJoined', Array.from(room.participants));
+    this.server.to(room.id).emit('syncIssues', room.issues);
   }
-
   @SubscribeMessage('startRound')
   async handleStart(
     @MessageBody() dto: StartRoundDto,
@@ -102,6 +103,10 @@ export class PlanningPokerGateway {
       this.server
         .to(dto.roomId)
         .emit('voteReceived', { count: task.votes.size });
+
+      this.server
+        .to(dto.roomId)
+        .emit('participantVoted', { participant: dto.participant });
 
       const room = this.poker.getRoom(dto.roomId);
       if (task.votes.size === room.participants.size) {
@@ -140,5 +145,25 @@ export class PlanningPokerGateway {
     } catch (err) {
       client.emit('error', err.message);
     }
+  }
+  @SubscribeMessage('issueUpdate')
+  handleIssueUpdate(
+    @MessageBody() data: { roomId: string; action: string; issue: any },
+  ) {
+    if (data.action === 'added') {
+      this.poker.addIssue(data.roomId, data.issue);
+    } else {
+      this.poker.updateIssue(data.roomId, data.issue);
+    }
+    this.server.to(data.roomId).emit('issueUpdate', data);
+  }
+
+  @SubscribeMessage('getIssues')
+  handleGetIssues(
+    @MessageBody('roomId') roomId: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    const allIssues = this.poker.getIssues(roomId);
+    client.emit('syncIssues', allIssues);
   }
 }
