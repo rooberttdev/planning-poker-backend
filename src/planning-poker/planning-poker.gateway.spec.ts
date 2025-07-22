@@ -41,11 +41,15 @@ describe('PlanningPokerGateway', () => {
       id: '123',
       moderator: 'Alice',
       participants: new Set(),
+      name: 'Teste Planning',
     });
 
-    gateway.handleCreate({ moderator: 'Alice' }, client);
+    gateway.handleCreate(
+      { moderator: 'Alice', roomName: 'Teste Planning' },
+      client,
+    );
 
-    expect(service.createRoom).toHaveBeenCalledWith('Alice');
+    expect(service.createRoom).toHaveBeenCalledWith('Alice', 'Teste Planning');
     expect(client.emit).toHaveBeenCalledWith(
       'roomCreated',
       expect.objectContaining({ id: '123' }),
