@@ -6,14 +6,22 @@ import { v4 as uuid } from 'uuid';
 export class PlanningPokerService {
   private readonly logger = new Logger(PlanningPokerService.name);
   private rooms = new Map<string, Room>();
-
-  createRoom(moderator: string): Room {
+  constructor() {
+    this.logger.log('PlanningPokerService initialized');
+    setInterval(() => {
+      this.logger.log(
+        `Active rooms: ${this.rooms.size} - IDs: [${Array.from(this.rooms.keys()).join(', ')}]`,
+      );
+    }, 30000);
+  }
+  createRoom(moderator: string, roomName?: string): Room {
     const id = uuid();
     const room: Room = {
       id,
       moderator,
       participants: new Set(),
       currentTask: undefined,
+      name: roomName,
     };
     this.rooms.set(id, room);
     this.logger.log(`Room created: ${id} by ${moderator}`);

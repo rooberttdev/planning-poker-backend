@@ -12,6 +12,7 @@ import { CreateRoomDto } from './dtos/create-room.dto';
 import { JoinRoomDto } from './dtos/join-room.dto';
 import { StartRoundDto } from './dtos/start-round.dto';
 import { VoteDto } from './dtos/vote.dto';
+import { GetRoomInfoDto } from './dtos/get-room-info.dto';
 
 @WebSocketGateway({ cors: true })
 @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
@@ -27,7 +28,7 @@ export class PlanningPokerGateway {
     @ConnectedSocket() client: Socket,
   ) {
     try {
-      const room = this.poker.createRoom(dto.moderator);
+      const room = this.poker.createRoom(dto.moderator, dto.roomName);
       client.join(room.id);
       client.emit('roomCreated', room);
       this.logger.log(`createRoom → ${room.id}`);
@@ -35,7 +36,24 @@ export class PlanningPokerGateway {
       client.emit('error', err.message);
     }
   }
-
+  @SubscribeMessage('getRoomInfo')
+  async handleGetRoomInfo(
+    @MessageBody() dto: GetRoomInfoDto,
+    @ConnectedSocket() client: Socket,
+  ) {
+    try {
+      const room = this.poker.getRoom(dto.roomId);
+      client.emit('roomInfo', {
+        roomId: dto.roomId,
+        name: room.name,
+        moderator: room.moderator,
+        participantCount: room.participants.size,
+      });
+      this.logger.log(`getRoomInfo → ${dto.roomId}`);
+    } catch (err) {
+      client.emit('error', err.message);
+    }
+  }
   @SubscribeMessage('joinRoom')
   async handleJoin(
     @MessageBody() dto: JoinRoomDto,
