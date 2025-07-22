@@ -28,8 +28,11 @@ npm install
 ```bash
 ng serve
 ```
+## Deploy da aplicação
 
-1. Acesse ao Swagger `https://planning-poker-backend-api.fly.dev/api`
+[Acesse o Swagger da API](https://planning-poker-backend-api.fly.dev/api)
+
+
 
 ## Estrutura do Projeto
 
