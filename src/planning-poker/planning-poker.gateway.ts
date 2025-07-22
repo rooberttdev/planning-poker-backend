@@ -13,6 +13,7 @@ import { JoinRoomDto } from './dtos/join-room.dto';
 import { StartRoundDto } from './dtos/start-round.dto';
 import { VoteDto } from './dtos/vote.dto';
 import { GetRoomInfoDto } from './dtos/get-room-info.dto';
+import { LeaveRoomDto } from './dtos/leave-room.dto';
 
 @WebSocketGateway({ cors: true })
 @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
@@ -165,5 +166,23 @@ export class PlanningPokerGateway {
   ) {
     const allIssues = this.poker.getIssues(roomId);
     client.emit('syncIssues', allIssues);
+  }
+
+  @SubscribeMessage('leaveRoom')
+  handleLeave(
+    @MessageBody() dto: LeaveRoomDto,
+    @ConnectedSocket() client: Socket,
+  ) {
+    const participants = this.poker.leaveRoom(dto.roomId, dto.participant);
+    client.leave(dto.roomId);
+    this.server
+      .to(dto.roomId)
+      .emit('participantJoined', Array.from(participants));
+  }
+
+  @SubscribeMessage('endRoom')
+  handleEnd(@MessageBody('roomId') roomId: string) {
+    this.server.to(roomId).emit('roomEnded');
+    this.poker.deleteRoom(roomId);
   }
 }

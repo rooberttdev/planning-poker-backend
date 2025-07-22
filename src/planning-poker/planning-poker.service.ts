@@ -106,4 +106,16 @@ export class PlanningPokerService {
     delete room.currentTask;
     this.logger.log(`Round reset in room ${id}`);
   }
+  leaveRoom(roomId: string, participant: string): Set<string> {
+    const room = this.getRoom(roomId);
+    room.participants.delete(participant);
+    this.logger.log(`${participant} left room ${roomId}`);
+    return room.participants;
+  }
+
+  deleteRoom(roomId: string): void {
+    this.getRoom(roomId);
+    this.rooms.delete(roomId);
+    this.logger.log(`Room deleted: ${roomId}`);
+  }
 }
