@@ -126,3 +126,29 @@ src/
 - Autenticação e autorização
 - Deploy em cloud
 - Testes unitários e e2e
+## Decisões Técnicas
+
+- NestJS + Socket.IO
+  Uso de @nestjs/platform-socket.io para gateway WebSocket, garantindo escalabilidade e hooks de ciclo de vida.
+
+- UUID v4
+  Identificadores únicos de sala (uuid), sem colisões mesmo em múltiplas instâncias.
+
+- In-memory state
+  Armazenamento de salas e votos em memória para simplicidade.
+
+- Swagger
+  Documentação automática via @nestjs/swagger, acessível em /api.
+
+- DTOs + class-validator
+  Garantia de payloads válidos antes de processar lógicas de negócio.
+
+- Modularização
+  Separação clara entre camada REST (rooms.controller), camada de negócio (rooms.service) e WebSocket (poker.gateway).
+
+- Deploy no Fly.io
+
+```
+ Imagem Docker declarada em Dockerfile
+ CI/CD automático via GitHub Actions / Fly CLI
+```
