@@ -1,10 +1,10 @@
 # 🃏 Planning Poker Backend
 
-Backend da aplicação Planning Poker, desenvolvido com NestJS, com suporte a REST API e comunicação em tempo real via WebSockets.
+Backend da aplicação Planning Poker, desenvolvido com NestJS, com suporte a REST API e comunicação em tempo real via WebSockets. Acesse ao Swagger : ttps://planning-poker-backend-api.fly.dev/api
 
 ---
 
-## 🚀 Pré-requisitos
+## Pré-requisitos
 
 - Node.js (versão 18 ou superior)
 - NestJS CLI (opcional)
@@ -28,8 +28,12 @@ npm install
 ```bash
 ng serve
 ```
+## Acesse a documentação Swagger
 
-1. Acesse ao Swagger `https://planning-poker-backend-api.fly.dev/api`
+[![Swagger](https://img.shields.io/badge/Swagger-API-blue)](https://planning-poker-backend-api.fly.dev/api)
+
+1. Abra a documentação interativa em: `https://planning-poker-backend-api.fly.dev/api`
+2. Link da API `https://planning-poker-backend-api.fly.dev`
 
 ## Estrutura do Projeto
 
