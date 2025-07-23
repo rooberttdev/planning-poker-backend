@@ -26,7 +26,10 @@ jobs:
           pnpm run build
 
       - name: Install flyctl
-        run: curl -L https://fly.io/install.sh | sh
+        run: |
+          curl -L https://fly.io/install.sh | sh
+          # adiciona o binário do flyctl ao PATH
+          echo "$HOME/.fly/bin" >> $GITHUB_PATH
 
       - name: Authenticate with Fly
         env:
